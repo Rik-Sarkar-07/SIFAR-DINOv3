@@ -1,7 +1,7 @@
 
-# DinoV3 Base and Small Model Finetuning on Video Datasets
+# DINOv3 Base and Small Model Finetuning on Video Datasets
 
-Finetuning **DinoV3** (small and base) pretrained checkpoints on video classification datasets (Kinetics-400, Something-Something-v2, etc.) using SIFAR-style input or MSN-style pretraining.
+Finetuning **DINOv3** (small and base) pretrained checkpoints on video classification datasets (Kinetics-400, Something-Something-v2, etc.) using SIFAR-style input or MSN-style pretraining.
 
 
 ## Quick Start
