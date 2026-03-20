@@ -3,8 +3,32 @@
 
 Finetuning **DinoV3** (small and base) pretrained checkpoints on video classification datasets (Kinetics-400, Something-Something-v2, etc.) using SIFAR-style input or MSN-style pretraining.
 
-## A. Dataset Preparation
 
+## Quick Start
+
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/Rik-Sarkar-07/SIFAR-DINOv3.git
+   cd SIFAR-DINOv3
+   ```
+
+2. **Environment Setup** (same for both pretraining & finetuning)
+   ```bash
+   conda env create --file env.yaml
+   conda activate sifar_msn
+   ```
+
+
+## A. Dataset Preparation
+### A1. **Dataset Download**
+   - Download annotation files (Kinetics-400 and SSv2) : [[Google Drive link for annotations](https://drive.google.com/drive/folders/1iVenj2jUaqbZfK9mHnyLfogkLF8nXq-O)]
+   - Download video datasets (Kinetics-400 and SSv2): [[Google Drive link for datasets](https://drive.google.com/drive/folders/1ObLuUCHZ2xDa2TCOpo4ew7Ne8vG_SuBD?usp=sharing)]
+   - Download data from G-Drive:-
+     ```
+     pip install gdown
+     gdown --fuzzy "<FULL_GOOGLE_DRIVE_URL>"
+     ```
+### A2. **Dataset annotation setup**
 1. Create annotation files: `train.txt` and `val.txt`
 2. Format of each line:
    ```
@@ -31,6 +55,7 @@ Finetuning **DinoV3** (small and base) pretrained checkpoints on video classific
 ### 1. Standard SIFAR-style DinoV3 Finetuning
 
 Use `--dino_model_path` + **do not** use `--msn_pretraining`
+
 
 **Example – DinoV3 Small (SIFAR)**
 
@@ -100,7 +125,7 @@ CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 -
 ## Contact
 
 **Author:** Sudipta Sarkar  
-**Date:** 16 Feb 2026  
+**Date:** 20 March 2026  
 **Email:** sudiptasarkar3600@gmail.com
 
 
