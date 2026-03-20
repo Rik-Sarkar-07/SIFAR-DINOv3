@@ -1,108 +1,140 @@
-
 # DINOv3 Base and Small Model Finetuning on Video Datasets
 
-Finetuning **DINOv3** (small and base) pretrained checkpoints on video classification datasets (Kinetics-400, Something-Something-v2, etc.) using SIFAR-style input or MSN-style pretraining.
+This repository focuses on finetuning **DINOv3 (Small and Base variants)** on video classification datasets such as **Kinetics-400** and **Something-Something-v2 (SSv2)** using **SIFAR-style input representation** and optional **MSN-style pretraining**.
 
+---
 
-## Quick Start
+##  Overview
 
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/Rik-Sarkar-07/SIFAR-DINOv3.git
-   cd SIFAR-DINOv3
-   ```
+**SIFAR (Super Image for Action Recognition)** adapts standard **image classification models** for video understanding by transforming video frames into a **single Super Image**.
 
-2. **Environment Setup** (same for both pretraining & finetuning)
-   ```bash
-   conda env create --file env.yaml
-   conda activate sifar_msn
-   ```
+Instead of sequential frame processing, frames are spatially rearranged into a grid, enabling the use of standard image backbones for video tasks.
 
+In this project, traditional CNN/ViT backbones are replaced with **DINOv3**, a self-supervised Vision Transformer backbone developed by Meta AI.
 
-## A. Dataset Preparation
-### A1. **Dataset Download**
-   - Download annotation files (Kinetics-400 and SSv2) : [[Google Drive link for annotations](https://drive.google.com/drive/folders/1iVenj2jUaqbZfK9mHnyLfogkLF8nXq-O)]
-   - Download video datasets (Kinetics-400 and SSv2): [[Google Drive link for datasets](https://drive.google.com/drive/folders/1ObLuUCHZ2xDa2TCOpo4ew7Ne8vG_SuBD?usp=sharing)]
-   - Download data from G-Drive:-
-     ```
-     pip install gdown
-     gdown --fuzzy "<FULL_GOOGLE_DRIVE_URL>"
-     ```
-### A2. **Dataset annotation setup**
-1. Create annotation files: `train.txt` and `val.txt`
-2. Format of each line:
-   ```
-   /raid/abircs/Datasets/Kinetics400/train_256/playing_drums/GJJUUAxgIYo_000007_000017.mp4 1 300 230
-   ```
-   → `video_path` `label` `start_frame` `end_frame`
+---
 
-3. Pass the **folder containing** these txt files (folder path) to `--data_dir`
+##  Architecture
 
-4. Update `video_dataset_config.py` with your dataset name and paths
+**Pipeline Overview:**
 
-### Note:- For conda environment use requirements.txt or env.yaml files.
+```
+Video Frames
+     │
+     ▼
+Frame Sampling
+     │
+     ▼
+Super Image Construction (SIFAR)
+     │
+     ▼
+DINOv3 Backbone
+     │
+     ▼
+Classification Head
+     │
+     ▼
+Action Prediction
+```
 
-## B. Training Details
+---
+
+##  Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Rik-Sarkar-07/SIFAR-DINOv3.git
+cd SIFAR-DINOv3
+```
+
+### 2. Environment Setup
+
+(Works for both pretraining and finetuning)
+
+```bash
+conda env create --file env.yaml
+conda activate sifar_msn
+```
+
+> **Note:** You may also use `requirements.txt` as an alternative.
+
+---
+
+##  A. Dataset Preparation
+
+### A1. Dataset Download
+
+* **Annotations (Kinetics-400 & SSv2):**
+  [https://drive.google.com/drive/folders/1iVenj2jUaqbZfK9mHnyLfogkLF8nXq-O](https://drive.google.com/drive/folders/1iVenj2jUaqbZfK9mHnyLfogkLF8nXq-O)
+
+* **Video Datasets:**
+  [https://drive.google.com/drive/folders/1ObLuUCHZ2xDa2TCOpo4ew7Ne8vG_SuBD](https://drive.google.com/drive/folders/1ObLuUCHZ2xDa2TCOpo4ew7Ne8vG_SuBD)
+
+#### Download using gdown:
+
+```bash
+pip install gdown
+gdown --fuzzy "<FULL_GOOGLE_DRIVE_URL>"
+```
+
+---
+
+### A2. Annotation Setup
+
+1. Create two files:
+
+   * `train.txt`
+   * `val.txt`
+
+2. Each line should follow the format:
+
+```
+/path/to/video.mp4 label start_frame end_frame
+```
+
+**Example:**
+
+```
+/raid/abircs/Datasets/Kinetics400/train_256/playing_drums/GJJUUAxgIYo_000007_000017.mp4 1 300 230
+```
+
+3. Provide the **directory containing these files** via:
+
+```
+--data_dir <path_to_annotation_folder>
+```
+
+4. Update dataset configurations in:
+
+```
+video_dataset_config.py
+```
+
+---
+
+## ⚙️ B. Training Details
 
 ### General Arguments
 
-| Argument          | Kinetics-400       | SSv2              | Notes                              |
-|-------------------|--------------------|-------------------|------------------------------------|
-| `--class_numbers` | 400                | 174               | Number of classes                  |
-| `--model`         | `dino_small`       | `dino_small`      | or `dino_base`                     |
-| `--duration`      | 16                 | 16                | Number of frames sampled           |
+| Argument          | Kinetics-400 | SSv2       | Description              |
+| ----------------- | ------------ | ---------- | ------------------------ |
+| `--class_numbers` | 400          | 174        | Number of classes        |
+| `--model`         | dino_small   | dino_small | or `dino_base`           |
+| `--duration`      | 16           | 16         | Number of sampled frames |
 
-### 1. Standard SIFAR-style DinoV3 Finetuning
+---
 
-Use `--dino_model_path` + **do not** use `--msn_pretraining`
+### 1. Standard SIFAR-style DINOv3 Finetuning
 
+* Use: `--dino_model_path`
+* Do **NOT** use: `--msn_pretraining`
 
-**Example – DinoV3 Small (SIFAR)**
-
-```bash
-CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 --master_port=28529 main.py \
-  --data_dir /home/dasabir/orcd/scratch/datasets/Kinetics400_sifar \
-  --use_pyav \
-  --dataset kinetics400 \
-  --opt adamw --lr 5e-4 --epochs 30 --sched cosine \
-  --duration 16 --batch-size 4 --super_img_rows 4 \
-  --num_workers 16 --disable_scaleup \
-  --mixup 0.8 --cutmix 1.0 --drop-path 0.05 \
-  --pretrained --warmup-epochs 5 --no-amp \
-  --model dino_small \
-  --output_dir /home/dasabir/orcd/scratch/sudipta/workspace/Sudipta_MSN_Dino/fine/Dino_MSN_Finetune/output/test_1 \
-  --weight-decay 0.01 --clip-grad 1.0 \
-  --class_numbers 400 \
-  --dino_model_path /home/dasabir/orcd/scratch/sudipta/workspace/Sudipta_MSN_Dino/Dino_MSN_Finetune/dino_repo/dinov3_vits16_pretrain_lvd1689m-08c60483.pth
-```
-
-**Example – DinoV3 Base (SIFAR)**
+#### Example: DINOv3 Small
 
 ```bash
 CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 --master_port=28529 main.py \
-  --data_dir /home/dasabir/orcd/scratch/datasets/Kinetics400_sifar \
-  --use_pyav --dataset kinetics400 \
-  --opt adamw --lr 5e-4 --epochs 30 --sched cosine \
-  --duration 16 --batch-size 4 --super_img_rows 4 \
-  --num_workers 16 --disable_scaleup \
-  --mixup 0.8 --cutmix 1.0 --drop-path 0.05 \
-  --pretrained --warmup-epochs 5 --no-amp \
-  --model dino_base \
-  --output_dir /home/dasabir/orcd/scratch/sudipta/workspace/Sudipta_MSN_Dino/fine/Dino_MSN_Finetune/output/test_1 \
-  --weight-decay 0.01 --clip-grad 1.0 \
-  --class_numbers 400 \
-  --dino_model_path /home/dasabir/orcd/scratch/sudipta/workspace/Sudipta_MSN_Dino/Dino_MSN_Finetune/dino_repo/dinov3_vitb16_pretrain.pth
-```
-
-### 2. MSN-style Finetuning of DinoV3
-
-Use `--msn_model_path` + `--msn_pretraining True`
-
-**Example – MSN-pretrained DinoV3 Small**
-
-```bash
-CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 --master_port=28529 main.py \
-  --data_dir /home/dasabir/orcd/scratch/datasets/Kinetics400_sifar \
+  --data_dir /path/to/Kinetics400_sifar \
   --use_pyav --dataset kinetics400 \
   --opt adamw --lr 5e-4 --epochs 30 --sched cosine \
   --duration 16 --batch-size 4 --super_img_rows 4 \
@@ -110,22 +142,71 @@ CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 -
   --mixup 0.8 --cutmix 1.0 --drop-path 0.05 \
   --pretrained --warmup-epochs 5 --no-amp \
   --model dino_small \
-  --output_dir /home/dasabir/orcd/scratch/sudipta/workspace/Sudipta_MSN_Dino/fine/Dino_MSN_Finetune/output/test_1 \
+  --output_dir /path/to/output \
+  --weight-decay 0.01 --clip-grad 1.0 \
+  --class_numbers 400 \
+  --dino_model_path /path/to/dinov3_vits16_pretrain.pth
+```
+
+#### Example: DINOv3 Base
+
+```bash
+--model dino_base \
+--dino_model_path /path/to/dinov3_vitb16_pretrain.pth
+```
+
+---
+
+### 2. MSN-style Finetuning
+
+* Use: `--msn_model_path`
+* Enable: `--msn_pretraining True`
+
+#### Example: MSN-pretrained DINOv3 Small
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch --nproc_per_node=2 main.py \
+  --data_dir /path/to/Kinetics400_sifar \
+  --use_pyav --dataset kinetics400 \
+  --opt adamw --lr 5e-4 --epochs 30 --sched cosine \
+  --duration 16 --batch-size 4 --super_img_rows 4 \
+  --num_workers 16 --disable_scaleup \
+  --mixup 0.8 --cutmix 1.0 --drop-path 0.05 \
+  --pretrained --warmup-epochs 5 --no-amp \
+  --model dino_small \
+  --output_dir /path/to/output \
   --weight-decay 0.01 --clip-grad 1.0 \
   --class_numbers 400 \
   --msn_pretraining True \
-  --msn_model_path /home/dasabir/orcd/scratch/sudipta/workspace/Sudipta_MSN_Dino/Dino_MSN_Pretraining/output/Dino_small_K400_with_lr_1e-6_and_fview_2/checkpoint.pth
+  --msn_model_path /path/to/msn_checkpoint.pth
 ```
 
-## C. Pretrained Checkpoints
+---
 
-- **DinoV3 Base** (LVD pretraining): [[link](https://drive.google.com/drive/folders/1e1PLmTIKrMzgnhplKvWIleIFo5iknFI6)]
-- **MSN-pretrained DinoV3 checkpoints**: [[link](https://drive.google.com/drive/folders/14y_jOugOtlDFJOaRJaehSfcXvxRG6lvb)] *(continuously updated)*
+##  C. Pretrained Checkpoints
 
-## Contact
+* **DINOv3 Base (LVD Pretraining):**
+  [https://drive.google.com/drive/folders/1e1PLmTIKrMzgnhplKvWIleIFo5iknFI6](https://drive.google.com/drive/folders/1e1PLmTIKrMzgnhplKvWIleIFo5iknFI6)
 
-**Author:** Sudipta Sarkar  
-**Date:** 20 March 2026  
-**Email:** sudiptasarkar3600@gmail.com
+* **MSN-pretrained DINOv3:**
+  [https://drive.google.com/drive/folders/14y_jOugOtlDFJOaRJaehSfcXvxRG6lvb](https://drive.google.com/drive/folders/14y_jOugOtlDFJOaRJaehSfcXvxRG6lvb)
+  *(Continuously updated)*
 
+---
 
+##  D. Acknowledgements
+
+This work builds upon:
+
+* **SIFAR: Super Image for Action Recognition**
+* **DINOv3: Self-supervised Vision Transformer (LVD pretraining)**
+
+---
+
+##  E. Contact
+
+**Author:** Sudipta Sarkar
+**Date:** 20 March 2026
+**Email:** [sudiptasarkar3600@gmail.com](mailto:sudiptasarkar3600@gmail.com)
+
+---
