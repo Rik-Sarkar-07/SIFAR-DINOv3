@@ -113,7 +113,7 @@ video_dataset_config.py
 
 ---
 
-## ⚙️ B. Training Details
+##  B. Training Details
 
 ### General Arguments
 
