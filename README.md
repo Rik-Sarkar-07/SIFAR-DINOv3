@@ -205,8 +205,6 @@ This work builds upon:
 
 ##  E. Contact
 
-## Contact
-
 **Author:** Sudipta Sarkar  
 
 **Date:** 20 March 2026  
@@ -214,4 +212,5 @@ This work builds upon:
 **Email:** [sudiptasarkar3600@gmail.com](mailto:sudiptasarkar3600@gmail.com)  
 
 **Website:** [sudipta-rkmrc.github.io](https://sudipta-rkmrc.github.io/website/)
+
 ---
